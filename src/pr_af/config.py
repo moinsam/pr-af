@@ -314,6 +314,9 @@ class ReviewConfig(BaseModel):
 
 class AIIntegrationConfig(BaseModel):
     provider: str = Field(default_factory=lambda: os.getenv("PR_AF_PROVIDER", "aforge"))
+    llm_provider: str = Field(
+        default_factory=lambda: os.getenv("PR_AF_LLM_PROVIDER", "openrouter")
+    )
     harness_model: str = Field(
         default_factory=lambda: os.getenv("PR_AF_MODEL", "minimax/minimax-m2.5")
     )
@@ -349,6 +352,8 @@ class AIIntegrationConfig(BaseModel):
             "ANTHROPIC_API_KEY",
             "OPENAI_API_KEY",
             "GOOGLE_API_KEY",
+            "OLLAMA_API_KEY",
+            "OLLAMA_BASE_URL",
             "GH_TOKEN",
         )
         env: dict[str, str] = {key: value for key in env_keys if (value := os.getenv(key))}

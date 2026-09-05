@@ -31,6 +31,31 @@ _ai_config = AIIntegrationConfig.from_env()
 NODE_ID = os.getenv("NODE_ID", "pr-af")
 HarnessConfig = _agentfield.HarnessConfig
 
+
+def _llm_connection() -> tuple[str, str, str]:
+    """Return the model, API key, and OpenAI-compatible base URL for .ai().
+
+    OpenRouter remains the default. Ollama exposes an OpenAI-compatible API,
+    but LiteLLM needs the ``/v1`` endpoint and a non-empty placeholder key.
+    """
+    if _ai_config.llm_provider.strip().lower() == "ollama":
+        base_url = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434").rstrip("/")
+        if not base_url.endswith("/v1"):
+            base_url = f"{base_url}/v1"
+        return (
+            _ai_config.ai_model,
+            os.getenv("OLLAMA_API_KEY", "ollama"),
+            base_url,
+        )
+    return (
+        _ai_config.ai_model,
+        os.getenv("OPENROUTER_API_KEY", ""),
+        "https://openrouter.ai/api/v1",
+    )
+
+
+_llm_model, _llm_api_key, _llm_api_base = _llm_connection()
+
 app = Agent(
     node_id=NODE_ID,
     version="0.1.0",
@@ -48,9 +73,9 @@ app = Agent(
         permission_mode="auto",
     ),
     ai_config=AIConfig(
-        model=_ai_config.ai_model,
-        api_key=os.getenv("OPENROUTER_API_KEY", ""),
-        api_base="https://openrouter.ai/api/v1",
+        model=_llm_model,
+        api_key=_llm_api_key,
+        api_base=_llm_api_base,
     ),
 )
 

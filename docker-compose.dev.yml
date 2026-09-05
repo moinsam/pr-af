@@ -1,0 +1,64 @@
+# PR-AF development node connected to an already-running AgentField control plane.
+# The control plane owns the external `agentfield-internal` network.
+
+services:
+  # Local, OpenAI-compatible LLM endpoint. The agent can still use OpenRouter;
+  # select Ollama with PR_AF_LLM_PROVIDER=ollama and PR_AF_PROVIDER=opencode.
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["local-ollama"]
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-dev-data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  pr-af:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "8004:8004"
+    environment:
+      - AGENTFIELD_SERVER=http://agentfield:8080
+      - AGENT_CALLBACK_URL=http://pr-af:8004
+      - PR_AF_PROVIDER=${PR_AF_PROVIDER:-aforge}
+      - PR_AF_LLM_PROVIDER=${PR_AF_LLM_PROVIDER:-openrouter}
+      - AGENTFIELD_AFORGE_COMMAND=${AGENTFIELD_AFORGE_COMMAND:-exec}
+      - PR_AF_MODEL=${PR_AF_MODEL:-deepseek/deepseek-v4-flash-0731}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-https://ollama.com}
+      - OLLAMA_API_KEY=${OLLAMA_API_KEY:-ollama}
+      - XDG_DATA_HOME=/home/praf/.local/share
+      - PR_AF_WORKDIR=/workspaces
+    volumes:
+      - pr-af-dev-workspaces:/workspaces
+      - pr-af-dev-opencode-data:/home/praf/.local/share
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 60s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+# Join the network owned by the separately-running AgentField control plane.
+# The control-plane container is reachable as `agentfield:8080` and this node
+# is reachable by the control plane as `pr-af:8004`.
+networks:
+  default:
+    external: true
+    name: agentfield-internal
+
+volumes:
+  ollama-dev-data:
+  pr-af-dev-workspaces:
+  pr-af-dev-opencode-data:
