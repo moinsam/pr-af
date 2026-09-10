@@ -175,14 +175,14 @@ Before a finding becomes a GitHub comment, the system tries to invalidate it: sa
 
 There are excellent AI code review tools on the market. PR-AF is not designed to replace fast, interactive tools; it is designed for comprehensive CI/CD gating where accuracy and architectural depth matter more than execution speed.
 
-| Feature | PR-AF (AgentField) | Claude Code CLI | Commercial SaaS (e.g. Codex, CodeRabbit) |
-|---|---|---|---|
-| **Best For** | Deep CI/CD architectural audits | Fast, iterative inner-loop development | Clean GitHub UX and chat-based reviews |
-| **Cost** | **Free / Open Source** (BYOK API costs only) | Pay-per-token (BYOK) | ~$20 - $25 / user / month |
-| **Architecture** | Massively parallel cognitive pipeline | Single-thread interactive loop | Context retrieval + LLM review |
-| **Execution Time**| ~35-50 minutes | Seconds to minutes | ~2-5 minutes |
-| **False Positives**| **Extremely low** (Evidence Grounding) | Moderate (relies on context window) | Low-to-Moderate (heuristic filtering) |
-| **Compound Risks**| **Yes** (Dedicated Compound Synthesizer) | Unlikely (diff-focused) | Partial (depends on retrieval accuracy) |
+| Feature             | PR-AF (AgentField)                           | Claude Code CLI                        | Commercial SaaS (e.g. Codex, CodeRabbit) |
+|---------------------|----------------------------------------------|----------------------------------------|------------------------------------------|
+| **Best For**        | Deep CI/CD architectural audits              | Fast, iterative inner-loop development | Clean GitHub UX and chat-based reviews   |
+| **Cost**            | **Free / Open Source** (BYOK API costs only) | Pay-per-token (BYOK)                   | ~$20 - $25 / user / month                |
+| **Architecture**    | Massively parallel cognitive pipeline        | Single-thread interactive loop         | Context retrieval + LLM review           |
+| **Execution Time**  | ~35-50 minutes                               | Seconds to minutes                     | ~2-5 minutes                             |
+| **False Positives** | **Extremely low** (Evidence Grounding)       | Moderate (relies on context window)    | Low-to-Moderate (heuristic filtering)    |
+| **Compound Risks**  | **Yes** (Dedicated Compound Synthesizer)     | Unlikely (diff-focused)                | Partial (depends on retrieval accuracy)  |
 
 *We highly recommend using Claude Code for your local development and running PR-AF as your final GitHub Actions gatekeeper.*
 
@@ -273,8 +273,8 @@ To use Ollama Cloud instead, set these values in `.env`:
 ```dotenv
 PR_AF_PROVIDER=opencode
 PR_AF_LLM_PROVIDER=ollama
-PR_AF_MODEL=ollama/glm-5.2:cloud
-PR_AF_AI_MODEL=ollama_chat/glm-5.2:cloud
+PR_AF_MODEL=ollama/glm-5.3:cloud
+PR_AF_AI_MODEL=ollama_chat/glm-5.3:cloud
 OLLAMA_BASE_URL=https://ollama.com
 OLLAMA_API_KEY=<your-ollama-cloud-api-key>
 ```
@@ -325,8 +325,8 @@ The key knobs (see `.env.example` for the full list):
 | `PR_AF_AFORGE_BIN`                | Path to an aforge-v2 binary (default `aforge`)                                                                                                                             |
 | `PR_AF_HARNESS_BIN`               | Provider-agnostic executable override                                                                                                                                      |
 | `PR_AF_MODEL`                     | Harness model; default `deepseek/deepseek-v4-flash-0731`, or `ollama/<model>`                                                                                              |
-| `PR_AF_AI_MODEL`                  | Optional direct AI model; use `ollama_chat/<model>` for Ollama; falls back to `PR_AF_MODEL`                                                                                 |
-| `PR_AF_MIN_SEVERITY`              | Minimum posted severity: `critical`, `important`, `suggestion`, or `nitpick` (default `nitpick`)                                                                            |
+| `PR_AF_AI_MODEL`                  | Optional direct AI model; use `ollama_chat/<model>` for Ollama; falls back to `PR_AF_MODEL`                                                                                |
+| `PR_AF_MIN_SEVERITY`              | Minimum posted severity: `critical`, `important`, `suggestion`, or `nitpick` (default `nitpick`)                                                                           |
 | `PR_AF_MAX_COST_USD`              | Per-run cost ceiling in USD (default `2.0`)                                                                                                                                |
 | `PR_AF_MAX_DURATION_SECONDS`      | Per-run wall-clock ceiling in seconds (default `3600`)                                                                                                                     |
 | `AGENTFIELD_HARNESS_IDLE_SECONDS` | Harness no-output watchdog window in seconds (default `360`) — harness CLIs in JSON mode emit events only at completion boundaries, so long single completions look silent |
