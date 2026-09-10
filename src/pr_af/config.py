@@ -137,7 +137,9 @@ class ScoringConfig(BaseModel):
 class CommentConfig(BaseModel):
     """Comment formatting and posting preferences."""
 
-    min_severity: str = "nitpick"  # Minimum severity to include in summary/comments
+    min_severity: str = Field(
+        default_factory=lambda: os.getenv("PR_AF_MIN_SEVERITY", "nitpick").lower()
+    )  # Minimum severity to include in summary/comments
     max_comments: int = 25  # Cap inline comments to avoid overwhelming
     include_suggestions: bool = True  # Include ```suggestion blocks
     include_dimension_attribution: bool = True  # Show which dimension found it

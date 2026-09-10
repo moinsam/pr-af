@@ -33,17 +33,20 @@ HarnessConfig = _agentfield.HarnessConfig
 
 
 def _llm_connection() -> tuple[str, str, str]:
-    """Return the model, API key, and OpenAI-compatible base URL for .ai().
+    """Return the model, API key, and API base URL for .ai().
 
-    OpenRouter remains the default. Ollama exposes an OpenAI-compatible API,
-    but LiteLLM needs the ``/v1`` endpoint and a non-empty placeholder key.
+    OpenRouter remains the default. Ollama uses LiteLLM's native ``ollama_chat``
+    adapter, which targets ``/api/chat`` from the server root.
     """
     if _ai_config.llm_provider.strip().lower() == "ollama":
         base_url = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434").rstrip("/")
-        if not base_url.endswith("/v1"):
-            base_url = f"{base_url}/v1"
+        model = _ai_config.ai_model
+        if model.startswith("ollama/"):
+            model = f"ollama_chat/{model.removeprefix('ollama/')}"
+        elif not model.startswith("ollama_chat/"):
+            model = f"ollama_chat/{model}"
         return (
-            _ai_config.ai_model,
+            model,
             os.getenv("OLLAMA_API_KEY", "ollama"),
             base_url,
         )
