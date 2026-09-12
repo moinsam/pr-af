@@ -40,15 +40,15 @@ snapshot.
 
 Where PR-AF shines:
 
-| strength | result |
-|---|---|
-| **Known bug recall** | 0.706 golden recall — #1 open source across 42 compared tools. |
-| **More real issues found** | 595 independently valid findings, ~3× more than the leading commercial tools in the adjusted comparison. |
-| **Open + reproducible** | Single open model (`GLM-5.2`), public results, per-PR judge verdicts, and reproduction scripts. |
-| **Self-hosted API** | Run locally with Docker; trigger reviews by CLI, curl, CI, or other agents. |
-| **Model-flexible** | Use cheaper models for regular PRs, GLM-5.2 for open-model CI gates, and Opus-class frontier models for highest-stakes reviews. |
-| **Frontier ceiling** | With Opus-class commercial models, PR-AF tops the benchmark by a wide margin. |
-| **Cost position** | About 10× cheaper per review than closed-source tools. |
+| strength                   | result                                                                                                                          |
+|----------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| **Known bug recall**       | 0.706 golden recall — #1 open source across 42 compared tools.                                                                  |
+| **More real issues found** | 595 independently valid findings, ~3× more than the leading commercial tools in the adjusted comparison.                        |
+| **Open + reproducible**    | Single open model (`GLM-5.2`), public results, per-PR judge verdicts, and reproduction scripts.                                 |
+| **Self-hosted API**        | Run locally with Docker; trigger reviews by CLI, curl, CI, or other agents.                                                     |
+| **Model-flexible**         | Use cheaper models for regular PRs, GLM-5.2 for open-model CI gates, and Opus-class frontier models for highest-stakes reviews. |
+| **Frontier ceiling**       | With Opus-class commercial models, PR-AF tops the benchmark by a wide margin.                                                   |
+| **Cost position**          | About 10× cheaper per review than closed-source tools.                                                                          |
 
 Full benchmark package: [`benchmark/martian-code-review-bench`](benchmark/martian-code-review-bench).
 
@@ -175,14 +175,14 @@ Before a finding becomes a GitHub comment, the system tries to invalidate it: sa
 
 There are excellent AI code review tools on the market. PR-AF is not designed to replace fast, interactive tools; it is designed for comprehensive CI/CD gating where accuracy and architectural depth matter more than execution speed.
 
-| Feature | PR-AF (AgentField) | Claude Code CLI | Commercial SaaS (e.g. Codex, CodeRabbit) |
-|---|---|---|---|
-| **Best For** | Deep CI/CD architectural audits | Fast, iterative inner-loop development | Clean GitHub UX and chat-based reviews |
-| **Cost** | **Free / Open Source** (BYOK API costs only) | Pay-per-token (BYOK) | ~$20 - $25 / user / month |
-| **Architecture** | Massively parallel cognitive pipeline | Single-thread interactive loop | Context retrieval + LLM review |
-| **Execution Time**| ~35-50 minutes | Seconds to minutes | ~2-5 minutes |
-| **False Positives**| **Extremely low** (Evidence Grounding) | Moderate (relies on context window) | Low-to-Moderate (heuristic filtering) |
-| **Compound Risks**| **Yes** (Dedicated Compound Synthesizer) | Unlikely (diff-focused) | Partial (depends on retrieval accuracy) |
+| Feature             | PR-AF (AgentField)                           | Claude Code CLI                        | Commercial SaaS (e.g. Codex, CodeRabbit) |
+|---------------------|----------------------------------------------|----------------------------------------|------------------------------------------|
+| **Best For**        | Deep CI/CD architectural audits              | Fast, iterative inner-loop development | Clean GitHub UX and chat-based reviews   |
+| **Cost**            | **Free / Open Source** (BYOK API costs only) | Pay-per-token (BYOK)                   | ~$20 - $25 / user / month                |
+| **Architecture**    | Massively parallel cognitive pipeline        | Single-thread interactive loop         | Context retrieval + LLM review           |
+| **Execution Time**  | ~35-50 minutes                               | Seconds to minutes                     | ~2-5 minutes                             |
+| **False Positives** | **Extremely low** (Evidence Grounding)       | Moderate (relies on context window)    | Low-to-Moderate (heuristic filtering)    |
+| **Compound Risks**  | **Yes** (Dedicated Compound Synthesizer)     | Unlikely (diff-focused)                | Partial (depends on retrieval accuracy)  |
 
 *We highly recommend using Claude Code for your local development and running PR-AF as your final GitHub Actions gatekeeper.*
 
@@ -199,7 +199,7 @@ af install https://github.com/Agent-Field/pr-af
 af run pr-af
 ```
 
-`af install` follows the repository manifest to the maintained Go package and registers it as the `pr-af` node with your control plane. If an older Python `pr-af` is installed, it is replaced in place, retaining the same node id, triggers, and node-scoped secrets. On first `af run` you're prompted for the required secrets — `OPENROUTER_API_KEY` and `GH_TOKEN` — which are stored encrypted and reused across every node, so you enter each only once. Then review a PR:
+`af install` follows the repository manifest to the maintained Go package and registers it as the `pr-af` node with your control plane. If an older Python `pr-af` is installed, it is replaced in place, retaining the same node id, triggers, and node-scoped secrets. On first `af run` you're prompted for the default provider secrets — `OPENROUTER_API_KEY` and `GH_TOKEN` — which are stored encrypted and reused across every node, so you enter each only once. Ollama can be selected when running the containerized Python node; see the provider configuration below. Then review a PR:
 
 ```bash
 af call pr-af.review --in '{"pr_url": "https://github.com/owner/repo/pull/123"}'
@@ -237,7 +237,7 @@ curl -X POST https://<control-plane>.up.railway.app/api/v1/execute/async/pr-af.r
 
 ```bash
 git clone https://github.com/Agent-Field/pr-af.git && cd pr-af
-cp .env.example .env          # Add OPENROUTER_API_KEY, GH_TOKEN
+cp .env.example .env          # Add the selected LLM key and GH_TOKEN
 docker compose up --build
 ```
 
@@ -255,30 +255,91 @@ Poll for results:
 curl http://localhost:8080/api/v1/executions/<execution_id>
 ```
 
+### Use Ollama with an existing AgentField control plane
+
+`docker-compose.dev.yml` runs only the PR-AF node and connects it to an already-running
+control plane on the external `agentfield-internal` network. OpenRouter remains the
+default configuration:
+
+```dotenv
+PR_AF_PROVIDER=aforge
+PR_AF_LLM_PROVIDER=openrouter
+PR_AF_MODEL=deepseek/deepseek-v4-flash-0731
+OPENROUTER_API_KEY=<your-openrouter-api-key>
+```
+
+To use Ollama Cloud instead, set these values in `.env`:
+
+```dotenv
+PR_AF_PROVIDER=opencode
+PR_AF_LLM_PROVIDER=ollama
+PR_AF_MODEL=ollama/glm-5.3:cloud
+PR_AF_AI_MODEL=ollama_chat/glm-5.3:cloud
+OLLAMA_BASE_URL=https://ollama.com
+OLLAMA_API_KEY=<your-ollama-cloud-api-key>
+```
+
+`PR_AF_LLM_PROVIDER` selects the model backend, while `PR_AF_PROVIDER` selects the
+coding-agent harness. Ollama mode uses OpenCode because the bundled AForge CLI requires
+OpenRouter. Direct `.ai()` calls use LiteLLM's `ollama_chat/<model>` adapter and target
+`OLLAMA_BASE_URL/api/chat`; use `https://ollama.com`, not `https://ollama.com/v1`.
+The OpenCode harness separately derives its OpenAI-compatible `/v1` endpoint.
+
+Deploy the node:
+
+```bash
+docker compose -f docker-compose.dev.yml up -d --build --force-recreate pr-af
+```
+
+Verify the Ollama Cloud endpoint and agent health:
+
+```bash
+docker compose -f docker-compose.dev.yml exec pr-af sh -c \
+  'curl -fsS -H "Authorization: Bearer $OLLAMA_API_KEY" \
+  "$OLLAMA_BASE_URL/api/version"'
+curl http://127.0.0.1:8004/health
+```
+
+The `glm-5.2:cloud` tag uses Ollama Cloud inference. For a fully local Ollama server,
+use an installed non-cloud model tag, set `OLLAMA_BASE_URL=http://ollama:11434`, and
+start the optional local profile before deploying:
+
+```bash
+docker compose -f docker-compose.dev.yml --profile local-ollama up -d ollama
+docker compose -f docker-compose.dev.yml exec ollama ollama pull <local-model>
+```
+
 ### Configuration (environment variables)
 
 The key knobs (see `.env.example` for the full list):
 
-| Variable                    | Purpose                                                        |
-|-----------------------------|----------------------------------------------------------------|
-| `OPENROUTER_API_KEY`        | LLM provider key (OpenRouter) — required                       |
-| `GH_TOKEN`                  | GitHub token (`repo` scope) for reading PRs and posting reviews |
-| `PR_AF_PROVIDER`            | Harness provider (default `aforge`; use `opencode` to roll back) |
-| `AGENTFIELD_AFORGE_COMMAND` | AForge headless command (default `exec`) — read by the Go node's SDK adapter; the pinned Python SDK always runs `exec` |
-| `PR_AF_AFORGE_BIN`          | Path to an aforge-v2 binary (default `aforge`)                 |
-| `PR_AF_HARNESS_BIN`         | Provider-agnostic executable override                          |
-| `PR_AF_MODEL`               | Harness model (default `deepseek/deepseek-v4-flash-0731`)      |
-| `PR_AF_MAX_COST_USD`        | Per-run cost ceiling in USD (default `2.0`)                    |
-| `PR_AF_MAX_DURATION_SECONDS`| Per-run wall-clock ceiling in seconds (default `3600`)         |
+| Variable                          | Purpose                                                                                                                                                                    |
+|-----------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `OPENROUTER_API_KEY`              | OpenRouter key — required for the default provider                                                                                                                         |
+| `OLLAMA_BASE_URL`                 | Ollama endpoint; defaults to `https://ollama.com` for Cloud                                                                                                                |
+| `OLLAMA_API_KEY`                  | Ollama Cloud API key; use `ollama` for an unauthenticated local server                                                                                                     |
+| `GH_TOKEN`                        | GitHub token (`repo` scope) for reading PRs and posting reviews                                                                                                            |
+| `PR_AF_LLM_PROVIDER`              | LLM backend: `openrouter` (default) or `ollama`                                                                                                                            |
+| `PR_AF_PROVIDER`                  | Harness: `aforge` (default) or `opencode`; Ollama requires `opencode`                                                                                                      |
+| `AGENTFIELD_AFORGE_COMMAND`       | AForge headless command (default `exec`) — read by the Go node's SDK adapter; the pinned Python SDK always runs `exec`                                                     |
+| `PR_AF_AFORGE_BIN`                | Path to an aforge-v2 binary (default `aforge`)                                                                                                                             |
+| `PR_AF_HARNESS_BIN`               | Provider-agnostic executable override                                                                                                                                      |
+| `PR_AF_MODEL`                     | Harness model; default `deepseek/deepseek-v4-flash-0731`, or `ollama/<model>`                                                                                              |
+| `PR_AF_AI_MODEL`                  | Optional direct AI model; use `ollama_chat/<model>` for Ollama; falls back to `PR_AF_MODEL`                                                                                |
+| `PR_AF_MIN_SEVERITY`              | Minimum posted severity: `critical`, `important`, `suggestion`, or `nitpick` (default `nitpick`)                                                                           |
+| `PR_AF_MAX_COST_USD`              | Per-run cost ceiling in USD (default `2.0`)                                                                                                                                |
+| `PR_AF_MAX_DURATION_SECONDS`      | Per-run wall-clock ceiling in seconds (default `3600`)                                                                                                                     |
 | `AGENTFIELD_HARNESS_IDLE_SECONDS` | Harness no-output watchdog window in seconds (default `360`) — harness CLIs in JSON mode emit events only at completion boundaries, so long single completions look silent |
-| `PR_AF_WORKDIR`             | Where PR checkouts live (default `/workspaces`); each PR gets its own `<repo>-pr<N>` workspace |
+| `PR_AF_WORKDIR`                   | Where PR checkouts live (default `/workspaces`); each PR gets its own `<repo>-pr<N>` workspace                                                                             |
 
 Both Docker images ship the released AForge CLI (fetched and checksum-verified
 at build time from `https://agentfield.ai/downloads/aforge`) and run `exec` by
 default. The Python node resolves the binary from `PR_AF_AFORGE_BIN` (or
 `PR_AF_HARNESS_BIN`); the maintained Go node resolves it from
-`PR_AF_HARNESS_BIN`. OpenCode stays installed in both images, so
-`PR_AF_PROVIDER=opencode` is a configuration-only rollback — no rebuild.
+`PR_AF_HARNESS_BIN`. OpenCode stays installed in both images, so switching to
+`PR_AF_PROVIDER=opencode` requires only a container restart. Ollama is configured
+through its OpenAI-compatible endpoint and does not require an image rebuild when
+only the provider or model variables change.
 
 The image's AForge version is pinned by the `AFORGE_VERSION` build arg;
 `AFORGE_BASE_URL` points the fetch at a different host when needed.

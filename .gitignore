@@ -14,3 +14,4 @@ agentfield-sdk/
 _glm52_bench/
 _minimax_bench/
 .sisyphus/
+.idea/
